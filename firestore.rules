@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // সহায়ক ফাংশন
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserRole() {
+      return isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isAdmin() {
+      return getUserRole() == "admin";
+    }
+
+    function isTeacher() {
+      return getUserRole() == "teacher";
+    }
+
+    // users/{uid} - ইউজার নিজের প্রোফাইল পড়তে/আপডেট করতে পারবে, admin সবকিছু পারবে
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      // role ফিল্ড নিজে বদলাতে পারবে না - শুধু admin পারবে
+      allow update: if isOwner(userId) &&
+                       (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+                       isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // dailyContent/{date} - সবাই পড়তে পারবে, শুধু admin/teacher লিখতে পারবে
+    match /dailyContent/{date} {
+      allow read: if true;
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // contactMessages/{id} - যে কেউ তৈরি করতে পারবে (contact ফর্ম), শুধু admin পড়তে পারবে
+    match /contactMessages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // courses/{courseId} - সবাই published কোর্স পড়তে পারবে, admin/teacher সব পড়তে ও লিখতে পারবে
+    match /courses/{courseId} {
+      allow read: if resource.data.status == "published" || isAdmin() || isTeacher();
+      allow create, update, delete: if isAdmin() || isTeacher();
+
+      // lessons সাব-কালেকশন - ফ্রি প্রিভিউ লেসন সবাই পড়তে পারবে,
+      // বাকি লেসন এনরোল্ড স্টুডেন্ট বা admin/teacher পড়তে পারবে।
+      // নোট: এনরোলমেন্ট ভেরিফাই করতে get() দিয়ে enrollments ডকুমেন্ট চেক করা হচ্ছে
+      // (ডকুমেন্ট আইডি কনভেনশন `${userId}_${courseId}` ব্যবহার করে)
+      match /lessons/{lessonId} {
+        allow read: if resource.data.isFreePreview == true ||
+                       isAdmin() || isTeacher() ||
+                       (isSignedIn() &&
+                        get(/databases/$(database)/documents/enrollments/$(request.auth.uid + '_' + courseId)).data.status == "approved");
+        allow write: if isAdmin() || isTeacher();
+
+        // quiz সাব-কালেকশন
+        match /quiz/{questionId} {
+          allow read: if isSignedIn();
+          allow write: if isAdmin() || isTeacher();
+        }
+
+        // assignmentSubmissions - স্টুডেন্ট নিজেরটা লিখতে/পড়তে পারবে, admin/teacher সব পড়তে পারবে
+        match /assignmentSubmissions/{userId} {
+          allow read: if isOwner(userId) || isAdmin() || isTeacher();
+          allow create, update: if isOwner(userId);
+        }
+
+        // comments - সাইন-ইন করা যেকেউ পড়তে/লিখতে পারবে, নিজেরটা ছাড়া এডিট/ডিলিট না
+        match /comments/{commentId} {
+          allow read: if true;
+          allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+          allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+        }
+      }
+    }
+
+    // enrollments/{enrollmentId} - স্টুডেন্ট নিজেরটা তৈরি/পড়তে পারবে, admin সব পড়তে/আপডেট করতে পারবে
+    match /enrollments/{enrollmentId} {
+      allow read: if isSignedIn() &&
+                     (resource.data.userId == request.auth.uid || isAdmin() || isTeacher());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // status বদলানো (approve/reject) শুধু admin/teacher করতে পারবে
+      allow update: if isAdmin() || isTeacher();
+    }
+
+    // lessonProgress/{progressId} - স্টুডেন্ট শুধু নিজের progress পড়তে/লিখতে পারবে
+    // (ডকুমেন্ট আইডি কনভেনশন `${userId}_${lessonId}`, তাই নতুন তৈরির সময় request.resource ব্যবহার করা হলো)
+    match /lessonProgress/{progressId} {
+      allow read: if isAdmin() || isTeacher() ||
+                     (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // quizAttempts/{attemptId} - স্টুডেন্ট নিজেরটা লিখতে/পড়তে পারবে
+    match /quizAttempts/{attemptId} {
+      allow read: if isSignedIn() &&
+                     (resource.data.userId == request.auth.uid || isAdmin() || isTeacher());
+      allow create, update: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // assessmentResults/{userId} - Self Assessment রিপোর্ট, ডকুমেন্ট আইডি = userId
+    // তাই owner চেক userId (path variable) দিয়ে সরাসরি করা যায়
+    match /assessmentResults/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || isTeacher();
+      allow create, update: if isOwner(userId);
+    }
+
+    // Quiz Center (Phase 5) - collectionGroup("quiz") দিয়ে সব কোর্স/লেসন জুড়ে quiz
+    // প্রশ্ন একত্রে পড়ার জন্য একটি wildcard rule প্রয়োজন। নেস্টেড path এর ভেতরের
+    // `match /quiz/{questionId}` rule শুধু normal (নির্দিষ্ট course/lesson) কুয়েরির
+    // জন্য প্রযোজ্য - collectionGroup query তে এই আলাদা top-level wildcard rule লাগবে।
+    match /{path=**}/quiz/{questionId} {
+      allow read: if isSignedIn();
+    }
+  }
+}

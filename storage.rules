@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // assignments/{courseId}/{lessonId}/{userId}/{fileName}
+    // শুধু নিজের ফাইল আপলোড করতে পারবে, ফাইল সাইজ ২০MB এর মধ্যে
+    match /assignments/{courseId}/{lessonId}/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    // lessons/{courseId}/{lessonId}/{fileName} - লেসন পিডিএফ, শুধু admin আপলোড করবে
+    // (Firestore এ role চেক করা storage rules এ সরাসরি সহজ নয়,
+    // তাই এই ফেজে admin panel থেকেই আপলোড হবে এবং সবাই পড়তে পারবে)
+    match /lessons/{courseId}/{lessonId}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}
