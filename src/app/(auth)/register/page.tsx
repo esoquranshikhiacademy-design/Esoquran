@@ -1,0 +1,139 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { BookOpenText } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+
+function getFirebaseErrorMessage(code: string): string {
+  switch (code) {
+    case "auth/email-already-in-use":
+      return "এই ইমেইল দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট আছে।";
+    case "auth/weak-password":
+      return "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।";
+    case "auth/invalid-email":
+      return "সঠিক ইমেইল ঠিকানা দিন।";
+    default:
+      return "রেজিস্ট্রেশন করা যায়নি। আবার চেষ্টা করুন।";
+  }
+}
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const { signUp, signInWithGoogle } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      await signUp(name, email, password);
+      router.push("/self-assessment");
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? "";
+      setError(getFirebaseErrorMessage(code));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+      router.push("/self-assessment");
+    } catch {
+      setError("গুগল দিয়ে রেজিস্ট্রেশন করা যায়নি। আবার চেষ্টা করুন।");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-4 py-12 sm:px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-700 text-white">
+            <BookOpenText size={24} />
+          </div>
+          <h1 className="text-2xl font-bold text-primary-950">রেজিস্ট্রেশন করুন</h1>
+          <p className="mt-1 text-sm text-ink-500">
+            আজই শুরু করুন আপনার কুরআন শেখার যাত্রা
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            id="name"
+            type="text"
+            label="পূর্ণ নাম"
+            placeholder="আপনার নাম লিখুন"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <Input
+            id="email"
+            type="email"
+            label="ইমেইল"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            id="password"
+            type="password"
+            label="পাসওয়ার্ড"
+            placeholder="কমপক্ষে ৬ অক্ষর"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            required
+          />
+
+          {error && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
+          <Button type="submit" isLoading={isLoading}>
+            রেজিস্ট্রেশন করুন
+          </Button>
+        </form>
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-ink-100" />
+          <span className="text-xs text-ink-400">অথবা</span>
+          <div className="h-px flex-1 bg-ink-100" />
+        </div>
+
+        <Button variant="outline" onClick={handleGoogleSignIn} isLoading={isLoading}>
+          গুগল দিয়ে রেজিস্ট্রেশন করুন
+        </Button>
+
+        <p className="mt-6 text-center text-sm text-ink-500">
+          অ্যাকাউন্ট আছে?{" "}
+          <Link href="/login" className="font-semibold text-primary-700">
+            লগইন করুন
+          </Link>
+        </p>
+      </motion.div>
+    </div>
+  );
+}
