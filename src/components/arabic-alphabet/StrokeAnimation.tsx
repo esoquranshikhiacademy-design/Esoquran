@@ -27,7 +27,7 @@ export function StrokeAnimation({
   return (
     <div className="flex flex-col items-center">
       <div className="relative flex h-48 w-48 items-center justify-center rounded-2xl bg-primary-50/50">
-        <svg viewBox="0 0 100 100" className="h-40 w-40" dir="rtl">
+        <svg viewBox="0 0 100 100" className="h-40 w-40" style={{ direction: "rtl" }}>
           {/* হালকা background আকৃতি - আসল অক্ষর, রেফারেন্স হিসেবে */}
           <text
             x="50"
