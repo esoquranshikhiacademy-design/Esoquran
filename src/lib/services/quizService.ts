@@ -20,7 +20,7 @@ function quizCollection(courseId: string, lessonId: string) {
 export async function getQuizQuestions(
   courseId: string,
   lessonId: string
-): Promise<QuizQuestion[]> {
+): Promise < QuizQuestion[] > {
   const q = query(quizCollection(courseId, lessonId), orderBy("order", "asc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as QuizQuestion);
@@ -29,8 +29,8 @@ export async function getQuizQuestions(
 export async function createQuizQuestion(
   courseId: string,
   lessonId: string,
-  data: Omit<QuizQuestion, "id">
-): Promise<string> {
+  data: Omit < QuizQuestion, "id" >
+): Promise < string > {
   const docRef = await addDoc(quizCollection(courseId, lessonId), data);
   return docRef.id;
 }
@@ -41,12 +41,12 @@ export async function submitQuizAttempt(
   lessonId: string,
   questions: QuizQuestion[],
   answers: QuizAnswer[]
-): Promise<QuizAttempt> {
+): Promise < QuizAttempt > {
   const { autoScorePercent, hasShortAnswerPendingReview } = calculateAutoScore(
     questions,
     answers
   );
-
+  
   const attempt: QuizAttempt = {
     id: `${userId}_${lessonId}`,
     userId,
@@ -57,7 +57,7 @@ export async function submitQuizAttempt(
     hasShortAnswerPendingReview,
     submittedAt: new Date().toISOString(),
   };
-
+  
   await setDoc(doc(db, "quizAttempts", attempt.id), attempt);
   return attempt;
 }
@@ -76,25 +76,26 @@ export interface CentralQuizQuestion extends QuizQuestion {
   courseTitle: string;
 }
 
-export async function getAllQuizQuestionsForCenter(): Promise<CentralQuizQuestion[]> {
+export async function getAllQuizQuestionsForCenter(): Promise < CentralQuizQuestion[] > {
   const publishedCourses = await getPublishedCourses();
-  const courseMap = new Map<string, Course>(publishedCourses.map((c) => [c.id, c]));
-
+  const courseMap = new Map < string,
+    Course > (publishedCourses.map((c) => [c.id, c]));
+  
   const snap = await getDocs(collectionGroup(db, "quiz"));
-
+  
   const results: CentralQuizQuestion[] = [];
   for (const docSnap of snap.docs) {
     const data = docSnap.data() as QuizQuestion;
     // শুধু প্রকাশিত কোর্সের প্রশ্ন দেখানো হবে (draft কোর্সের quiz Quiz Center এ আসবে না)
     const course = courseMap.get(data.courseId);
     if (!course) continue;
-
+    
     results.push({
-      id: docSnap.id,
       ...data,
+      id: docSnap.id,
       courseTitle: course.title,
     });
   }
-
+  
   return results;
 }
