@@ -107,4 +107,11 @@ export const dictionary = {
 } as const;
 
 export type Locale = keyof typeof dictionary;
-export type Dictionary = (typeof dictionary)["bn"];
+
+type DeepWidenStrings<T> = T extends readonly (infer U)[]
+  ? readonly DeepWidenStrings<U>[]
+  : T extends string
+    ? string
+    : { [K in keyof T]: DeepWidenStrings<T[K]> };
+
+export type Dictionary = DeepWidenStrings<(typeof dictionary)["bn"]>;
