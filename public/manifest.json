@@ -1,12 +1,15 @@
 {
+  "id": "/",
   "name": "এসো কুরআন শিখি একাডেমি",
   "short_name": "কুরআন শিখি",
   "description": "একটি স্মার্ট ইসলামিক লার্নিং প্ল্যাটফর্ম - ধাপে ধাপে কুরআন শিখুন",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#fbfaf7",
   "theme_color": "#186447",
   "orientation": "portrait-primary",
+  "lang": "bn",
   "icons": [
     {
       "src": "/icons/icon-192.png",

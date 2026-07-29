@@ -18,6 +18,22 @@ const nextConfig: NextConfig = {
     ],
   },
   reactStrictMode: true,
+  async headers() {
+    return [
+      {
+        // সার্ভিস ওয়ার্কার ফাইল কখনো স্টেল-ক্যাশ যেন না হয় — নাহলে আপডেট ঠিকভাবে পৌঁছাবে না
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/manifest.json",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

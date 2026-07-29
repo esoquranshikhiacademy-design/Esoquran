@@ -1,23 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpenText, Facebook, Youtube, Mail } from "lucide-react";
+import {
+  BookOpenText,
+  Facebook,
+  Youtube,
+  Instagram,
+  Twitter,
+  Linkedin,
+  MessageCircle,
+  Mail,
+} from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function Footer() {
   const { t } = useLanguage();
   const year = new Date().getFullYear();
 
-  const quickLinks = [
-    { href: "/courses", label: t.nav.courses },
-    { href: "/quran-learning", label: t.nav.quranLearning },
-    { href: "/self-assessment", label: t.nav.selfAssessment },
-    { href: "/faq", label: "FAQ" },
+  const socialLinks = [
+    { href: "#", label: "Facebook", icon: Facebook },
+    { href: "#", label: "YouTube", icon: Youtube },
+    { href: "#", label: "Instagram", icon: Instagram },
+    { href: "#", label: "Twitter", icon: Twitter },
+    { href: "#", label: "LinkedIn", icon: Linkedin },
+    { href: "#", label: "WhatsApp", icon: MessageCircle },
   ];
 
   return (
     <footer className="mt-16 border-t border-primary-100 bg-primary-950 text-primary-50">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-12 sm:grid-cols-3 sm:px-6">
         {/* ব্র্যান্ড */}
         <div>
           <div className="flex items-center gap-2">
@@ -27,25 +38,6 @@ export function Footer() {
             <span className="text-lg font-semibold">এসো কুরআন শিখি</span>
           </div>
           <p className="mt-3 text-sm text-primary-200">{t.footer.about}</p>
-        </div>
-
-        {/* দ্রুত লিংক */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gold-300">
-            {t.footer.quickLinks}
-          </h3>
-          <ul className="space-y-2">
-            {quickLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-sm text-primary-200 transition-colors hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* যোগাযোগ */}
@@ -67,21 +59,17 @@ export function Footer() {
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gold-300">
             সংযুক্ত থাকুন
           </h3>
-          <div className="flex gap-3">
-            <a
-              href="#"
-              aria-label="Facebook"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-800 transition-colors hover:bg-gold-400 hover:text-primary-950"
-            >
-              <Facebook size={16} />
-            </a>
-            <a
-              href="#"
-              aria-label="YouTube"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-800 transition-colors hover:bg-gold-400 hover:text-primary-950"
-            >
-              <Youtube size={16} />
-            </a>
+          <div className="flex flex-wrap gap-3">
+            {socialLinks.map(({ href, label, icon: Icon }) => (
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-800 transition-colors hover:bg-gold-400 hover:text-primary-950"
+              >
+                <Icon size={16} />
+              </a>
+            ))}
           </div>
         </div>
       </div>

@@ -1,15 +1,14 @@
 import { HeroSection } from "@/components/home/HeroSection";
-import { SmartSearch } from "@/components/home/SmartSearch";
 import { TodaySection } from "@/components/home/TodaySection";
-import { LearningJourney } from "@/components/home/LearningJourney";
+import { Footer } from "@/components/layout/Footer";
+import { LandingShell } from "@/components/layout/LandingShell";
 
 export default function HomePage() {
   return (
-    <>
+    <LandingShell>
       <HeroSection />
-      <SmartSearch />
       <TodaySection />
-      <LearningJourney />
-    </>
+      <Footer />
+    </LandingShell>
   );
 }

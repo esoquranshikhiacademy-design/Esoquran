@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { HeroBannerSlider } from "@/components/home/HeroBannerSlider";
 
 export function HeroSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary-50 via-white to-white py-16 sm:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-b from-primary-50 via-white to-white py-10 sm:py-16">
       {/* ব্যাকগ্রাউন্ড ডেকোরেশন - জ্যামিতিক ইসলামিক প্যাটার্নের অনুভূতি */}
       <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-40" />
       <motion.div
@@ -23,17 +24,17 @@ export function HeroSection() {
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-5 inline-flex items-center gap-2 rounded-full border border-gold-300 bg-gold-50 px-4 py-1.5 text-xs font-medium text-gold-700"
-        >
-          <Sparkles size={14} />
-          সম্পূর্ণ ইন্টারেক্টিভ কুরআন শেখার প্ল্যাটফর্ম
-        </motion.div>
+      {/* হিরো ব্যানার স্লাইডার */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative mb-8"
+      >
+        <HeroBannerSlider />
+      </motion.div>
 
+      <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -59,7 +60,7 @@ export function HeroSection() {
           className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
           <Link
-            href="/courses"
+            href="/quran-learning"
             className="group flex w-full items-center justify-center gap-2 rounded-full bg-primary-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-700/20 transition-all hover:bg-primary-800 sm:w-auto"
           >
             {t.hero.cta}
